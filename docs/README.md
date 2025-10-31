@@ -433,3 +433,7 @@ wire pulse_b = t1_b ^ t2_b;   // 토글 전이 = 1사이클 펄스
 3. 멀티비트 경로는 버스 단위 원자성 보장(Async FIFO/Handshake)
 4. 비동기 리셋 해제를 각 도메인에서 클록 동기화
 5. STA/CDC 툴 제약(false path, max delay 등)을 포인터/동기화 경로에 명시
+
+---
+
+
