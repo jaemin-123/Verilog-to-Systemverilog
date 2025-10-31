@@ -3,11 +3,11 @@
 - [조합회로 vs 순차회로](README.md#조합회로-vs-순차회로)
 - [블로킹(=) vs 논블로킹(<=)](README.md#블로킹-vs-논블로킹)
 - [FSM 템플릿](README.md#fsm유한-상태-기계-finite-state-machine)
-- [CDC(2-플롭 동기화)](README.md#메타안정--클록-도메인-교차cdc)
+- [CDC(2-플롭 동기화)](README.md#메타안정-&-클록-도메인-크로싱(cdc))
 - [Verilog 치트시트](verilog.md)
 - [SystemVerilog 치트시트](systemverilog.md)
 - [Verilog vs SV 비교표](comparison.md)
-
+  
 ## 조합회로 vs 순차회로
 
 ### 1) 개념 요약
