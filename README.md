@@ -8,7 +8,7 @@
 2. [Verilog 개요](docs/verilog.md)
 3. [SystemVerilog(SV) 개요](docs/systemverilog.md)
 4. [Verilog vs SV 비교표](docs/comparison.md)
-5. 예제 모음
+5. [예제 모음](examples)
 6. 보드별 가이드
 7. 툴체인 플로우
 8. 레포 구조
