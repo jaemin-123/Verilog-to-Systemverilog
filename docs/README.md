@@ -7,7 +7,22 @@
 - [Verilog 치트시트](verilog.md)
 - [SystemVerilog 치트시트](systemverilog.md)
 - [Verilog vs SV 비교표](comparison.md)
-  
+
+---
+
+## 규칙
+- **클록/리셋 네이밍**: `clk`, `rst_n`(active-low)으로 통일  
+- **리셋 정책**: 비동기 assert / **동기 deassert**(해제는 클록 동기화 필수)  
+- **조합/순차 규칙**:  
+  - 조합 → `always @*` + **blocking `=`** + **기본값 대입**(래치 방지)  
+  - 순차 → `@(posedge clk …)` + **nonblocking `<=`**  
+- **case 사용**: `default` 필수, `casex/casez`(와일드카드)는 지양  
+- **assign vs always**: 단순식/연결은 `assign`, 분기·기본값·여러 단계 계산은 `always @*`  
+- **버스 폭/부호**: 산술 전 **명시적 확장**(캐리·부호 보존)  
+- **트라이스테이트**: 탑레벨 `inout`에서만 `1'bz` 사용(내부는 MUX)
+
+---
+
 ## 조합회로 vs 순차회로
 
 ### 1) 개념 요약
