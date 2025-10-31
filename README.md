@@ -10,6 +10,7 @@
 - [예제 모음](examples)
 - [보드별 가이드](boards)
 - [툴체인 플로우](flows)
+- 레포 구조 (요약)
 
 ---
 
@@ -23,26 +24,17 @@
 
 ## 보드별 가이드
 
-- Basys3: boards/basys3/
-- Zybo-Z7: boards/zybo-z7/
+- [Basys3](boards/basys3/)
+- [Zybo-Z7](boards/zybo-z7/)
 
 ## 툴체인 플로우
 
-- Vivado: flows/vivado/
-- Quartus: flows/quartus/
+- [Vivado](flows/vivado/)
+- [Quartus](flows/quartus/)
 
 ## 레포 구조 (요약)
 
-- docs/ — Verilog·SV 정리 및 비교표
+- docs/ — Verilog·SV 정리 및 비교
 - examples/ — 소형 예제(V→SV 변환 기록)
 - boards/ — 보드별 제약/가이드
 - flows/ — Vivado/Quartus 스크립트
-
-## 로드맵
-
-- [ ] 01.gates: SV 버전/비교 메모 보완
-- [ ] 02.full_adder: 파형 캡처 추가
-- [ ] 03.mux41: SV 버전 및 XSIM 확인
-- [ ] ALU 토픽 추가(비교 문서/파형)
-- [ ] Basys3 다운로드 튜토리얼 이미지
-- [ ] Zybo-Z7 예제 1건 동작 확인
