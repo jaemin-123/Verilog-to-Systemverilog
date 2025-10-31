@@ -1,9 +1,9 @@
-# 문서 인덱스 & 기본서 (Fundamentals)
+# 정리
 
 - [조합회로 vs 순차회로](README.md#조합회로-vs-순차회로)
 - [블로킹(=) vs 논블로킹(<=)](README.md#블로킹-vs-논블로킹)
 - [FSM 템플릿](README.md#fsm유한-상태-기계-finite-state-machine)
-- [CDC(2-플롭 동기화)](README.md#메타안정-&-클록-도메인-크로싱(cdc))
+- [CDC(2-플롭 동기화)](README.md#메타안정--클록-도메인-크로싱cdc)
 - [Verilog 치트시트](verilog.md)
 - [SystemVerilog 치트시트](systemverilog.md)
 - [Verilog vs SV 비교표](comparison.md)
@@ -110,11 +110,11 @@ always @(posedge clk or negedge rst_n) begin
 end
 ```
 
-**예: 동기 리셋 + 이네이블블**
+**예: 동기 리셋 + 이네이블**
 ```verilog
-always @(posedge clk or negedge rst_n) begin
-  if (!rst_n) q <= '0;
-  else        q <= d;
+always @(posedge clk) begin
+  if (!rst_n) q <= '0;   // 동기 리셋
+  else if (en) q <= d;
 end
 ```
 
@@ -130,7 +130,7 @@ end
 | 장점 | 임시변수 계산 순서 표현 쉬움 | 레지스터들의 **동시 업데이트** 보장 |
 | 흔한 위험 | 일부 경로 미대입 → **래치** 유도 | 이전값/새값 타이밍 오해 |
 
-**규칙칙**
+**규칙**
 - **조합 = `=`**, **순차 = `<=`**  
 - 같은 신호를 **같은 타임스텝에서 `=`와 `<=`로 혼용 금지**  
 - 하나의 신호에는 **드라이버 1개**만(다중 드라이브 금지)
@@ -277,13 +277,12 @@ module fsm_toggle (
 
   // (B) 다음 상태/출력
   always @* begin
-    // 기본값(래치 방지)
-    next = state;    
-    out  = 1'b0;      
-    case (state) // Mealy 예: 입력이 1일 때 즉시 out 반응
-      S0: if (in) begin next = S1; out = 1'b1; end
-      S1: if (in) begin next = S0; out = 1'b1; end
-      default: begin next = S0; out = 1'b0; end
+    next = state;
+    case (state)
+      S0: if (in) next = S1;
+      S1: if (in) next = S2;
+      S2: if (in) next = S0;
+      default:    next = S0;
     endcase
   end
 endmodule
