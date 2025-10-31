@@ -15,11 +15,14 @@
 
 ## 예제 모음 (V→SV 변환 기록)
 
+## 예제 모음 (V→SV 변환 기록)
+
 | 주제 | Verilog | SystemVerilog | Testbench | 메모 |
 |---|---|---|---|---|
-| 게이트(기초) | [examples/01. gates/gates.v](examples/01.gates/gates.v) | [examples/01. gates/gates_sv.sv](examples/01.gates/gates_sv.sv) | [examples/01. gates/tb_gates.v](examples/01.%20gates/tb_gates.v) |  |
+| 게이트(기초) | [examples/01. gates/gates.v](examples/01.%20gates/gates.v) | [examples/01. gates/gates_sv.sv](examples/01.%20gates/gates_sv.sv) | [examples/01. gates/tb_gates.v](examples/01.%20gates/tb_gates.v) |  |
 | 1-bit/풀가산기 | [examples/02.full_adder/full_adder.v](examples/02.full_adder/full_adder.v) | [examples/02.full_adder/full_adder_sv.sv](examples/02.full_adder/full_adder_sv.sv) | [examples/02.full_adder/tb_full_adder.v](examples/02.full_adder/tb_full_adder.v) |  |
-| 4:1 MUX | [examples/03. mux41/mux41.v](examples/03.mux41/mux41.v) | [examples/03. mux41/mux41_sv.sv](examples/03.mux41/mux41_sv.sv) | [examples/03. mux41/tb_mux41.v](examples/03.mux41/tb_mux41.v) |  |
+| 4:1 MUX | [examples/03. mux41/mux41.v](examples/03.%20mux41/mux41.v) | [examples/03. mux41/mux41_sv.sv](examples/03.%20mux41/mux41_sv.sv) | [examples/03. mux41/tb_mux41.v](examples/03.%20mux41/tb_mux41.v) |  |
+
 
 
 > 각 폴더에 V/SV/TB를 함께 두고, 필요하면 간단 실행 스크립트(run_icarus.sh)를 추가합니다.
