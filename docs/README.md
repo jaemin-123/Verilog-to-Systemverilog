@@ -85,7 +85,7 @@ end
 **핵심 규칙**
 - `always @(posedge clk or negedge rst_n)` 등 클록/리셋 감지식 사용  
 - **nonblocking `<=`** 사용(레지스터 간 동시 업데이트)  
-- 리셋은 **동기/비동기** 중 프로젝트 규칙에 맞춰 통
+- 리셋은 **동기/비동기** 중 프로젝트 규칙에 맞춰 통일
 
 **예: 비동기 Low 리셋 DFF**
 ```verilog
@@ -95,7 +95,7 @@ always @(posedge clk or negedge rst_n) begin
 end
 ```
 
-**예: 동기 리셋 + 이네이플**
+**예: 동기 리셋 + 이네이블블**
 ```verilog
 always @(posedge clk or negedge rst_n) begin
   if (!rst_n) q <= '0;
@@ -115,7 +115,7 @@ end
 | 장점 | 임시변수 계산 순서 표현 쉬움 | 레지스터들의 **동시 업데이트** 보장 |
 | 흔한 위험 | 일부 경로 미대입 → **래치** 유도 | 이전값/새값 타이밍 오해 |
 
-**철칙**
+**규칙칙**
 - **조합 = `=`**, **순차 = `<=`**  
 - 같은 신호를 **같은 타임스텝에서 `=`와 `<=`로 혼용 금지**  
 - 하나의 신호에는 **드라이버 1개**만(다중 드라이브 금지)
@@ -260,35 +260,20 @@ module fsm_toggle (
     else        state <= next;
   end
 
-  // 3) 다음 상태/출력 로직 (조합)
+  // (B) 다음 상태/출력
   always @* begin
-    // 기본값 (래치 방지)
-    next = state;
-    out  = 1'b0;
-
-    case (state)
-      S0: begin
-        // Mealy 예: 입력이 1일 때 즉시 out 반응
-        if (in) begin
-          next = S1;
-          out  = 1'b1;
-        end
-      end
-      S1: begin
-        if (in) begin
-          next = S0;
-          out  = 1'b1;
-        end
-      end
-      default: begin
-        next = S0;
-        out  = 1'b0;
-      end
+    // 기본값(래치 방지)
+    next = state;    
+    out  = 1'b0;      
+    case (state) // Mealy 예: 입력이 1일 때 즉시 out 반응
+      S0: if (in) begin next = S1; out = 1'b1; end
+      S1: if (in) begin next = S0; out = 1'b1; end
+      default: begin next = S0; out = 1'b0; end
     endcase
   end
 endmodule
 ```
-## 규칙
+### 규칙
 
 - **순차 블록(레지스터)** → `<=`, **조합 블록** → `=`
 - **조합 블록의 `next`/`out`에 기본값을 먼저 대입** (모든 경로 커버)
@@ -296,18 +281,18 @@ endmodule
 
 ---
 
-## 4) Moore vs Mealy 간단 비교
+### 4) Moore vs Mealy 간단 비교
 
 | 항목 | Moore | Mealy |
 |---|---|---|
 | **출력 의존** | 상태 | 상태 + 입력 |
 | **반응 속도** | 한 클록 느릴 수 있음 | **빠름**(입력 변화에 즉시) |
 | **글리치 가능성** | 낮음(상태 FF 출력) | 있을 수 있음(조합 경로) |
-| **사용 팁** | 안정적 출력이 필요할 때 | 즉각 반응이 중요할 때(필터링 유의) |
+| **사용 팁** | 안정적 출력이 필요할 때 | 즉각 반응이 중요할 때(필요 시 FF로 필터) |
 
 ---
 
-## 5) One-hot 인코딩 템플릿
+### 5) One-hot 인코딩 템플릿
 
 ```verilog
 // 상태가 3개면 FF 3개(one-hot). S0=001, S1=010, S2=100
@@ -340,7 +325,6 @@ always @* begin
   endcase
 end
 ```
-- 도구에 따라`(fsm_encoding = "one-hot")`같은 어트리뷰트로도 지정 가능
 
 ---
 
@@ -353,5 +337,85 @@ end
 
 ---
 
-## 메타안정 / 클록 도메인 교차(CDC)
-(내용…)
+## 메타안정 & 클록 도메인 크로싱(CDC)
+
+### 개요
+- **메타안정(Metastability)**: 비동기 신호가 플립플롭의 **setup/hold** 창을 침범해 출력이 일시적으로 비정의가 되는 현상
+- **CDC**: 서로 다른 클록 도메인 간 신호 전달 문제를 다루며, 목표는 **메타안정 완화**와 **이벤트/데이터 무손실 전송**
+
+---
+
+### 1) 단일 비트 ‘레벨(level)’ 신호
+- 예: `enable`, `mode`, 버튼 상태 등 **지속 레벨**
+- **대응**: **2-Flip-Flop(2FF) 동기화**로 MTBF(Mean Time Between Failure) 지수적 향상
+  동기화 **이후**의 신호만 조합조건(if/case)이나 FSM에 사용
+
+```verilog
+// clkA → clkB로 들어오는 레벨 신호 동기화
+reg s1, s2;
+always @(posedge clk_b or negedge rst_n) begin
+  if (!rst_n) {s2, s1} <= 2'b0;
+  else        {s2, s1} <= {s1, async_level_from_clkA};
+end
+wire level_clkB = s2;  // 동기화된 레벨
+```
+- 2FF는 메타안정을 “완전히 제거”X, 발생 확률을 충분히 낮추는 방식
+
+---
+
+### 2) 단일 비트 ‘펄스(pulse)’ 신호
+- 예: 1-cycle 트리거/인터럽트
+- 문제: 수신 도메인에서 **미표본(missed event)** 가능
+- 대응(권장): **토글(toggle) 동기화** — 이벤트를 토글 비트의 **전이(edge)**로 표현하여 안전히 재생성
+```verilog
+// clkA: 펄스 → 토글
+reg tog_a;
+always @(posedge clk_a or negedge rst_n) begin
+  if (!rst_n)      tog_a <= 1'b0;
+  else if (pulse_a) tog_a <= ~tog_a;
+end
+
+// clkB: 2FF 동기화 + 에지 검출
+reg t1_b, t2_b;
+always @(posedge clk_b or negedge rst_n) begin
+  if (!rst_n) {t2_b, t1_b} <= 2'b00;
+  else        {t2_b, t1_b} <= {t1_b, tog_a};
+end
+wire pulse_b = t1_b ^ t2_b;   // 토글 전이 = 1사이클 펄스
+```
+- 보조안: 펄스 **폭 확장**(여러 사이클 유지). 간단하지만 포괄적 보장은 약함
+
+---
+
+### 3) 멀티비트 데이터(버스)
+- 문제: 비트별 샘플 시점 차이로 **부분 갱신/글리치** → 데이터 무결성 파손
+- **비동기 FIFO(권장)**: 듀얼포트 RAM + **Gray coded pointer**
+  - 각 도메인에서 write/read 포인터를 로컬 클록으로 구동
+  - 포인터만 반대 도메인으로 **2FF 동기화**
+  - Gray 포인터는 1비트만 변해 안전한 비교가 가능
+- **핸드셰이크(요청/응답)**: `valid` 유지 + `ready/ack` 왕복, 왕복 제어신호 모두 2FF 동기화
+- 핵심: 멀티비트는 **비트별 2FF**로 해결 불가 → **FIFO/핸드셰이크** 필요
+
+---
+
+### 리셋(Reset)과 CDC
+- **비동기 assert / 동기 deassert** 권장: 각 도메인에서 리셋 **해제는 클록에 동기화**
+- **RDC(Reset Domain Crossing)**도 고려: 가능하면 리셋 도메인 **통일**, 불가 시 해제 동기화
+
+---
+
+### 5) 실전 가이드라인 (요약)
+- 단일 **레벨 → 2FF** 동기화
+- 단일 **펄스 → 토글 동기화**(또는 펄스 폭 확장)
+- **멀티비트 → 비동기 FIFO** 또는 **핸드셰이크**
+- 동기화 이전 신호는 조합/FSM 입력에 사용 금지
+- 클록/리셋 **방식·극성 통일**(`rst_n` 권장), 리셋 **해제 동기화** 필수
+
+---
+
+### 6) 체크리스트
+1. 모든 CDC 경로에 적절한 동기화기(2FF/토글/FIFO/Handshake) 배치
+2. 동기화 후 신호만 FSM/조합 로직 입력으로 사용
+3. 멀티비트 경로는 버스 단위 원자성 보장(Async FIFO/Handshake)
+4. 비동기 리셋 해제를 각 도메인에서 클록 동기화
+5. STA/CDC 툴 제약(false path, max delay 등)을 포인터/동기화 경로에 명시
