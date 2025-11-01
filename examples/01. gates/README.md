@@ -35,6 +35,8 @@
 xvlog gates.v tb_gates.v
 xelab tb_gates -s tb_gates_sim --debug typical
 xsim tb_gates_sim -gui
+#위의 3개를 한번에
+make gui-xsim
 # xsim 콘솔에서:
 add_wave -recursive *
 run all
