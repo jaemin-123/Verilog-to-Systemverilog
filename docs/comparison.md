@@ -1,6 +1,5 @@
 # Verilog vs SystemVerilog (디자인 관점 비교)
 
-> Home → [README](README.md) → **Comparison**  
 > Verilog 패턴: [verilog.md](verilog.md) · SystemVerilog 업그레이드: [systemverilog.md](systemverilog.md)
 
 ---
