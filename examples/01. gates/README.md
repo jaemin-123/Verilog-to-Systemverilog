@@ -39,6 +39,9 @@ xsim tb_gates_sim -gui
 add_wave -recursive *
 run all
 ```
+> **xvlog: 소스 컴파일**
+> **xelab: 엘라보(링킹/스냅샷 생성)**
+> **xsim: 실행(콘솔/GUI)**
 
 ### ModelSim‑Intel / Questa
 ```tcl
