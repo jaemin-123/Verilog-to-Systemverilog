@@ -46,9 +46,9 @@ SystemVerilog 업그레이드: [`systemverilog.md`](systemverilog.md) · 차이�
   wire [7:0] y;
   assign y = sel ? a : b;   // 단순 MUX
   ```
-- **절차 블록(Procedural)** - `always` 안에는 `reg`에 대입
+- **절차 블록(Procedural)** - `always` 블록 안에서 **변수(`reg`)**에 대입
   - **조합 블록**: `always @*` + **blocking `=`** + **기본값**(래치 방지)
-  - **순차 블록**: `always @(posedge clk ...)` + **nonblocking** `<=`
+  - **순차 블록**: `always @(posedge clk ...)` + **nonblocking `<=`**
   ```verilog
   // 조합(우선순위 + 기본값)
   reg [7:0] y_c;
@@ -105,11 +105,12 @@ module prio_enc4 (
   output reg       valid
 );
   always @* begin
-    code  = 2'b00; valid = 1'b0;
-    if      (in[3]) begin code = 2'b11; valid = 1'b1; end
-    else if (in[2]) begin code = 2'b10; valid = 1'b1; end
-    else if (in[1]) begin code = 2'b01; valid = 1'b1; end
-    else if (in[0]) begin code = 2'b00; valid = 1'b1; end
+    code  = 2'b00;
+    valid = |in;                // 하나라도 1이면 valid=1
+    if      (in[3]) code = 2'b11;
+    else if (in[2]) code = 2'b10;
+    else if (in[1]) code = 2'b01;
+    else if (in[0]) code = 2'b00;
   end
 endmodule
 ```
@@ -224,7 +225,7 @@ module fsm_3state (
 endmodule
 ```
 > SV 차이점
-> - `typedef enum logic [1:0] {s0,s1,s2} state_e;`
+> - `typedef enum logic [1:0] {S0,S1,S2} state_e;`
 > - `unique case` 로 누락 경로 경고/커버리지 향상
 
 ---
@@ -247,7 +248,7 @@ module and_array #(parameter N=4)(
 );
   genvar i;
   generate
-    for (i=0; i<N; i=i+1) begin : g
+    for (i=0; i<N; i=i+1) begin : g // g[i].<signal> 로 접근
       assign y[i] = a[i] & b[i];
     end
   endgenerate
@@ -261,7 +262,7 @@ endmodule
 ## 합성 vs 시뮬레이션 주의
 - **래치 유도 금지**(조합 블록 기본값/`default` 필수)
 - **다중 드라이브 금지**(같은 신호를 여러 곳에서 모는 실수)
-- **내부 tri-state 지양**(MUX로 대체), tri-state는 **탑레벨 `inout`에서만
+- **내부 tri-state 지양**(MUX로 대체), tri-state는 **탑레벨 `inout`**에서만
 - `casex/casez` 지양(와일드카드 오해 위험)
 - 보일러플레이트: 거의 변하지 않고 반복적으로 사용되는 코드(파일 최상/최하)
 ```verilog
