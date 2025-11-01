@@ -29,7 +29,6 @@
 
 ## 공통 코딩 규칙
 - **클록/리셋 네이밍**: `clk`, `rst_n`(active-low)으로 통일  
-- **리셋 정책**: 비동기 assert / **동기 deassert**(해제는 클록 동기화 필수)  
 - **조합/순차 규칙**:  
   - 조합 → `always @*` + **blocking `=`** + **기본값 대입**(래치 방지)  
   - 순차 → `@(posedge clk …)` + **nonblocking `<=`**  
