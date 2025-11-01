@@ -31,12 +31,12 @@ SystemVerilog 업그레이드: [`systemverilog.md`](systemverilog.md) · 차이�
   wire [8:0] sum9 = {1'b0, d} + {1'b0, e};   // 0 붙여 캐리 보존
   wire [7:0] fill = {8{en}};                 // en을 8번 반복
   ```
-> Do: 산술 전 폭/부호를 명시적으로 맞추기(`{1'b0,a}` 처럼)
+> Do: 산술 전 폭/부호를 명시적으로 맞추기(`{1'b0,a}` 처럼)<br>
 > Don't: 서로 다른 폭을 무심코 더하기(경고/의도치 않은 잘림)
 
 > SV 차이점
 > - `wire/reg` 대신 `logic` 하나로 통일 가능(단일 드라이버 전제)
-> - 타입 추론/엄격한 블록 구분(`always_comb/ff`)
+> - 타입 추론/엄격한 블록 구분(`always_comb/ff`)<br>
 >   자세히 → [sy
 
 
