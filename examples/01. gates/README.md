@@ -2,7 +2,8 @@
 
 > **Board:** Basys3 (XC7A35T-1CPG236C) · **Vivado:** 2022.2 · **Language:** Verilog HDL
 
-(프로젝트 개요 스크린샷 1장을 여기에 넣어주세요)
+<img width="437" height="472" alt="image" src="https://github.com/user-attachments/assets/dd989f9c-6197-4379-9690-53cd69a7ab4b" />
+
 
 ---
 
@@ -28,6 +29,7 @@
 ---
 
 ## Simulation
+<img width="1138" height="245" alt="image" src="https://github.com/user-attachments/assets/5d3d3ced-a690-4c46-8217-1d001b92f495" />
 
 ### Vivado xsim (Non‑project, 추천)
 ```bash
