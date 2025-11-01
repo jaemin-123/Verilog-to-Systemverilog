@@ -1,4 +1,4 @@
-# SystemVerilog Upgrade (Design-Oriented)
+# SystemVerilog
 
 > Verilog 기초/패턴은: [verilog.md](verilog.md) · 차이표는: [comparison.md](comparison.md)
 
