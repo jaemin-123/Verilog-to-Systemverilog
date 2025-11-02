@@ -1,52 +1,57 @@
-# ===== Config =====
-TOP   ?= tb_gates  # top모듈 이름
-SRCS  ?= gates.v tb_gates.v # TB 할 파일이름
+# ==== Tools (경로가 PATH에 없으면 호출 시 VIV=..., VSIM=... 로 덮어쓰기) ====
+VIV  ?= vivado
+VSIM ?= vsim
 
-# 툴(경로가 PATH에 잡혀 있지 않다면 절대경로로 바꿔도 됨)
-VSIM  ?= vsim
-VLOG  ?= vlog
-VLIB  ?= vlib
-VDEL  ?= vdel
-XVLOG ?= xvlog
-XELAB ?= xelab
-XSIM  ?= xsim
+# ==== Project auto-discovery ====
+# 예제 폴더(ex: EX=examples/01.gates)
+EX   ?= examples/01.gates
 
-.PHONY: help sim-msim gui-msim sim-xsim gui-xsim clean
+# 기본 파일 자동 추론
+RTL  ?= $(EX)/*.v
+TB   ?= $(firstword $(wildcard $(EX)/tb_*.v))
+TOP  ?= $(notdir $(basename $(TB)))     # tb_gates.v -> tb_gates
+XDC  ?= $(EX)/xdc/*.xdc
+PART ?= xc7a35tcpg236-1
+OUT  ?= build/$(notdir $(EX))
+
+# 합성/비트용 DUT(Top DUT 모듈명) — 필요 시 커맨드에서 지정하거나 example.mk로 지정
+DUT  ?=
+
+# 각 예제 폴더에 선택적으로 example.mk를 두면 여기로 흡수됨 (DUT, PART 등 오버라이드)
+-include $(EX)/example.mk
+
+.PHONY: help msim xsim synth bit clean
 
 help:
-	@echo "make sim-msim  : ModelSim/Questa 콘솔 실행"
-	@echo "make gui-msim  : ModelSim/Questa GUI 실행"
-	@echo "make sim-xsim  : Vivado xsim 콘솔 실행"
-	@echo "make gui-xsim  : Vivado xsim GUI 실행"
-	@echo "make clean     : 생성물 삭제"
+	@echo "make xsim  EX=examples/01.gates                   # Vivado xsim으로 TB 시뮬"
+	@echo "make msim  EX=examples/01.gates [VSIM=...]       # ModelSim/Questa 시뮬"
+	@echo "make synth EX=examples/01.gates DUT=gates        # 합성 (DUT=Top 모듈명)"
+	@echo "make bit   EX=examples/01.gates DUT=gates        # 배치/라우트/비트스트림"
+	@echo ""
+	@echo "옵션: PART=$(PART)  XDC=$(XDC)  OUT=$(OUT)"
+	@echo "도구 경로: VIV=$(VIV)  VSIM=$(VSIM)"
 
-# ----- ModelSim/Questa -----
-sim-msim: $(SRCS)
-	-$(VDEL) -all
-	$(VLIB) work
-	$(VLOG) +acc $(SRCS)
-	$(VSIM) -c $(TOP) -do "run -all; stop"
+# -------- ModelSim/Questa --------
+msim:
+	@echo "[MSIM] EX=$(EX)  TB=$(TB)  TOP=$(TOP)"
+	$(VSIM) -c -do "set RTL {$(RTL)}; set TB $(TB); set TOP $(TOP); do flows/modelsim/run.do"
 
-gui-msim: $(SRCS)
-	-$(VDEL) -all
-	$(VLIB) work
-	$(VLOG) +acc $(SRCS)
-	$(VSIM) $(TOP) -do "add wave -r /*; run -all"
+# -------- Vivado xsim (simulation) --------
+xsim:
+	@echo "[XSIM] EX=$(EX)  TB=$(TB)  TOP=$(TOP)"
+	$(VIV) -mode tcl -source flows/vivado/xsim.tcl -tclargs "$(RTL)" "$(TB)" $(TOP)
 
-# ----- Vivado xsim -----
-XELAB_DBG ?= --debug typical
+# -------- Vivado synthesis --------
+synth:
+	@test -n "$(DUT)" || (echo "ERROR: set DUT=<top_module> (e.g., DUT=gates)"; exit 1)
+	@echo "[SYNTH] EX=$(EX)  DUT=$(DUT)  PART=$(PART)"
+	$(VIV) -mode batch -source flows/vivado/synth.tcl -tclargs $(DUT) $(PART) "$(RTL)" "$(XDC)" "$(OUT)"
 
-sim-xsim: $(SRCS)
-	$(XVLOG) $(SRCS)
-	$(XELAB) $(TOP) -s $(TOP)_sim $(XELAB_DBG)
-	$(XSIM)  $(TOP)_sim -runall
-
-gui-xsim: $(SRCS)
-	$(XVLOG) $(SRCS)
-	$(XELAB) $(TOP) -s $(TOP)_sim $(XELAB_DBG)
-	$(XSIM)  $(TOP)_sim -gui -onfinish stop
+# -------- Vivado implement + bitstream --------
+bit:
+	@test -n "$(DUT)" || (echo "ERROR: set DUT=<top_module> (e.g., DUT=gates)"; exit 1)
+	@echo "[BIT] EX=$(EX)  DUT=$(DUT)  PART=$(PART)"
+	$(VIV) -mode batch -source flows/vivado/bit.tcl -tclargs $(DUT) $(PART) "$(RTL)" "$(XDC)" "$(OUT)"
 
 clean:
-	-$(VDEL) -all
-	-rm -rf work transcript vsim.wlf *.wlf *.vcd *.fst
-	-rm -rf xsim.dir *.pb *.jou *.log *.wdb *.str *.ucdb
+	-@rm -rf build *.log *.jou xsim.dir .Xil .xil work transcript vsim.wlf *.wdb *.wlf
