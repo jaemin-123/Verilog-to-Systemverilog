@@ -1,0 +1,57 @@
+name: smoke-verilog
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  lint-and-sim:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install tools (Icarus Verilog & Verilator)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y iverilog verilator
+
+      - name: Verilator Lint (all .v under repo)
+        run: |
+          files=$(git ls-files "*.v")
+          if [ -n "$files" ]; then
+            echo "$files" | xargs verilator --lint-only -Wall -Wno-DECLFILENAME
+          else
+            echo "No .v files found"; exit 1
+          fi
+
+      - name: Icarus Simulation (auto-discover tb_*.v under examples/)
+        run: |
+          set -e
+          shopt -s globstar nullglob
+          PASSED=0
+          FAILED=0
+          for tb in examples/**/tb_*.v; do
+            dir=$(dirname "$tb")
+            tbn=$(basename "$tb" .v)
+            srclist=()
+            for f in "$dir"/*.v; do
+              [ "$f" != "$tb" ] && srclist+=("$f")
+            done
+            if [ ${#srclist[@]} -eq 0 ]; then
+              echo "::warning::No RTL found next to $tb, skipping"
+              continue
+            fi
+            echo "=== Building $tbn in $dir ==="
+            iverilog -g2005 -o simv "$tb" "${srclist[@]}"
+            if vvp simv; then
+              echo "=== PASS: $tbn ==="
+              PASSED=$((PASSED+1))
+            else
+              echo "::error::Simulation failed for $tbn"
+              FAILED=$((FAILED+1))
+            fi
+            rm -f simv
+          done
+          echo "Passed: $PASSED  Failed: $FAILED"
+          [ $FAILED -eq 0 ]
