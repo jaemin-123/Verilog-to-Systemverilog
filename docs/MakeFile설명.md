@@ -1,42 +1,12 @@
 
-# Repo Structure & Automation Guide (ASIC/FPGA)
+# 스크립트 설명
 
 이 문서는 **상위=Makefile**, **하위=도구 스크립트(do/Tcl)** 구조로
 시뮬레이션(xsim/ModelSim)과 합성/비트스트림(Vivado)을 **한 줄 명령**으로 재현하는 템플릿입니다.
 
 ---
 
-## 1) 추천 폴더 구조 (너 현재 레포 기준)
-
-```
-/                             # 루트
-├─ README.md
-├─ docs/                      # 설명 문서(지금처럼)
-├─ examples/
-│  ├─ 01.gates/
-│  │  ├─ gates.v
-│  │  ├─ tb_gates.v
-│  │  ├─ README.md
-│  │  └─ xdc/gates.xdc        # (보드 핀맵 있으면)
-│  ├─ 02.full_adder/ ...
-│  └─ 03.mux41/ ...
-├─ flows/                     # 도구별 자동화 스크립트 모음(전역)
-│  ├─ vivado/                 # Vivado Tcl (시뮬/합성/비트스트림)
-│  │  ├─ xsim.tcl
-│  │  ├─ synth.tcl
-│  │  └─ bit.tcl
-│  └─ modelsim/               # ModelSim do
-│     └─ run.do
-└─ Makefile                   # 상위 오케스트레이터(루트 1개)
-```
-
-> 폴더명은 **flows/**를 유지 추천. 이미 갖고 있으니 거기에 Vivado/ModelSim 스크립트를 모아두면 좋아요.
-> 예제별 로컬 스크립트가 필요하면 `examples/01.gates/scripts/`를 쓰되,
-> **전역 기본 스크립트는 flows/**로 두는 게 관리가 쉽습니다.
-
----
-
-## 2) 루트 Makefile (상위, 한 줄 실행)
+## 1) 루트 Makefile (상위, 한 줄 실행)
 
 > 위치: **/Makefile**
 
@@ -86,9 +56,9 @@ clean:
 
 ---
 
-## 3) 하위 스크립트 (도구 전용)
+## 2) 하위 스크립트 (도구 전용)
 
-### 3.1 ModelSim run.do
+### 2.1 ModelSim run.do
 > 위치: **flows/modelsim/run.do**
 
 ```tcl
@@ -106,7 +76,7 @@ quit
 
 ---
 
-### 3.2 Vivado xsim (시뮬) – xsim.tcl
+### 2.2 Vivado xsim (시뮬) – xsim.tcl
 > 위치: **flows/vivado/xsim.tcl**
 
 ```tcl
@@ -124,7 +94,7 @@ xsim  ${top_tb}_sim -runall
 
 ---
 
-### 3.3 Vivado 합성 – synth.tcl
+### 2.3 Vivado 합성 – synth.tcl
 > 위치: **flows/vivado/synth.tcl**
 
 ```tcl
@@ -153,7 +123,7 @@ exit
 
 ---
 
-### 3.4 Vivado 배치/라우트/비트스트림 – bit.tcl
+### 2.4 Vivado 배치/라우트/비트스트림 – bit.tcl
 > 위치: **flows/vivado/bit.tcl**
 
 ```tcl
@@ -182,7 +152,7 @@ exit
 
 ---
 
-## 4) 사용 예 (루트에서 한 줄)
+## 3) 사용 예 (루트에서 한 줄)
 
 ```bash
 # 시뮬레이션
@@ -199,7 +169,7 @@ make clean
 
 ---
 
-## 5) 예제 바꿔 돌리기
+## 4) 예제 바꿔 돌리기
 
 - 한 레포에 여러 예제가 있을 때는 **flows 스크립트의 소스 경로**만 바꾸거나,
 - `examples/<name>/scripts/`에 예제 전용 xsim.tcl/run.do를 둔 뒤,
@@ -217,7 +187,7 @@ sim-adder:
 
 ---
 
-## 6) 폴더 이름 추천
+## 5) 폴더 이름 추천
 
 - 전역 도구 스크립트: **`flows/vivado`**, **`flows/modelsim`**
 - 보드 정의/제약: **`boards/`** (보드별 XDC, 노트)
@@ -228,7 +198,7 @@ sim-adder:
 
 ---
 
-## 7) 팁 (실무 감각)
+## 6) 팁 (실무 감각)
 
 - GUI는 디버깅용, 정식 실행은 **배치/로그/리포트 자동 산출**.
 - xsim 파형은 `xelab --debug typical` 필수.
