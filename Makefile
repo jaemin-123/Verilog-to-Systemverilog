@@ -3,8 +3,8 @@ VIV  ?= vivado
 VSIM ?= vsim
 
 # ==== Project auto-discovery ====
-# 예제 폴더(ex: EX=examples/01.gates)
-EX   ?= examples/01.gates
+# 예제 폴더(ex: EX=examples/01.gates) 수정
+EX   ?= 
 
 # 기본 파일 자동 추론
 RTL  ?= $(EX)/*.v
