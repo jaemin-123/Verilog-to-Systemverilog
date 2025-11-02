@@ -49,3 +49,4 @@ jobs:
           done < <(find examples -type f -name 'tb_*.v' -print0)
           echo "Passed: $PASSED  Failed: $FAILED"
           [ $FAILED -eq 0 ]
+          
