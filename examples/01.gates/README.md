@@ -69,7 +69,7 @@ run -all
 4. **Open Hardware Manager** → Program Device
 
 ```tcl
-# xdc/gates.xdc
+# .xdc
 set_property -dict { PACKAGE_PIN V17 IOSTANDARD LVCMOS33 } [get_ports iA]
 set_property -dict { PACKAGE_PIN V16 IOSTANDARD LVCMOS33 } [get_ports iB]
 set_property -dict { PACKAGE_PIN U16 IOSTANDARD LVCMOS33 } [get_ports oAND]
