@@ -1,206 +1,214 @@
-# 수정해야함
-# 스크립트 설명
+## Verilog 예제 공통 Makefile 사용 플로우 정리
 
-이 문서는 **상위=Makefile**, **하위=도구 스크립트(do/Tcl)** 구조로
-시뮬레이션(xsim/ModelSim)과 합성/비트스트림(Vivado)을 **한 줄 명령**으로 재현하는 템플릿입니다.
+이 문서는 공통 `Makefile` 하나로 Verilog 예제들을
+
+> **시뮬레이션(xsim/msim) → 합성 → 구현+비트스트림 → 결과 수집**
+
+까지 실행하는 방법을 정리한 것이다.
 
 ---
 
-## 1) 루트 Makefile (상위, 한 줄 실행)
+## 0. 기본 개념
 
-> 위치: **/Makefile**
+각 예제는 `EX` 라는 변수로 선택해서 실행한다.
+
+- 예: `EX=examples/gate` 또는 `EX=gate`  
+- 예제 폴더 안에 있는 `.v`, `tb_*.v`, `.xdc` 등을 자동으로 찾아서 사용한다.
+
+---
+
+## 1. 예제 디렉터리 구조 & 자동 추론
+
+### 1.1 예제 폴더 구조 (예시)
+
+```text
+.
+├─ Makefile
+├─ xsim.tcl
+├─ synth.tcl
+├─ bit.tcl
+├─ run.do
+└─ examples/
+   ├─ gate/
+   │   ├─ gates.v       # DUT
+   │   ├─ tb_gates.v    # testbench (tb_*.v 규칙)
+   │   └─ gate.xdc      # (선택) Basys3 등 보드용 XDC
+   ├─ alu/
+   │   ├─ alu.v
+   │   ├─ tb_alu.v
+   │   └─ alu.xdc
+   └─ ...
+```
+
+### 1.2 Makefile이 자동으로 추론하는 변수들
 
 ```make
-# ===== Orchestrator (root Makefile) =====
-VIV ?= vivado
-VSIM?= vsim
-
-# 기본 타깃: 도움말
-.PHONY: help
-help:
-	@echo "make sim-xsim        - Vivado xsim 시뮬(비프로젝트)"
-	@echo "make sim-msim        - ModelSim 시뮬(비프로젝트)"
-	@echo "make synth           - Vivado 합성(Post-Synth 리포트)"
-	@echo "make bit             - Vivado 배치/라우트/비트스트림"
-	@echo "make clean           - 생성물 삭제"
-
-# ---- Simulation ----
-.PHONY: sim-xsim sim-msim
-sim-xsim:
-	$(VIV) -mode tcl   -source flows/vivado/xsim.tcl
-
-sim-msim:
-	$(VSIM) -c -do flows/modelsim/run.do
-
-# ---- Synthesis & Bitstream ----
-.PHONY: synth bit
-synth:
-	$(VIV) -mode batch -source flows/vivado/synth.tcl
-
-bit:
-	$(VIV) -mode batch -source flows/vivado/bit.tcl
-
-# ---- Clean (로그/캐시 일괄 제거) ----
-.PHONY: clean
-clean:
-	-rm -rf work transcript vsim.wlf *.wlf *.ucdb
-	-rm -rf xsim.dir .Xil *.jou *.log *.wdb *.pb *.str *.backup.*
-	-rm -rf build
+RTL  ?= $(EX)/*.v                      # 설계 + TB 포함 Verilog
+TB   ?= $(firstword $(wildcard $(EX)/tb_*.v))
+TOP  ?= $(notdir $(basename $(TB)))    # tb_gates.v -> tb_gates
+XDC  ?= $(EX)/*.xdc
+PART ?= xc7a35tcpg236-1                # 기본 Basys3
+OUT  ?= build/$(notdir $(EX))          # 결과 폴더 (예: build/gate)
+DUT  ?=                                # 합성/비트스트림용 최상위 모듈명
 ```
 
-> Vivado/ModelSim이 PATH에 없으면, 환경변수로 경로를 넘길 수 있습니다.
-> ```bash
-> make sim-xsim VIV="C:/Xilinx/Vivado/2022.2/bin/vivado"
-> make sim-msim VSIM="C:/altera/13.0sp1/modelsim_ase/win32aloem/vsim.exe"
-> ```
+- `TB` 를 기준으로 **testbench 이름(TOP)** 을 자동 추출한다.
+- `DUT` 는 **합성/비트스트림 시 Top 모듈** 이름이라 반드시 지정해줘야 한다.
+- 예제 폴더 안에 `example.mk` 를 두고 `DUT`, `PART` 등을 덮어쓸 수 있다.
 
 ---
 
-## 2) 하위 스크립트 (도구 전용)
+## 2. 시뮬레이션 플로우
 
-### 2.1 ModelSim run.do
-> 위치: **flows/modelsim/run.do**
-
-```tcl
-vdel -all
-vlib work
-vlog +acc examples/01.gates/gates.v examples/01.gates/tb_gates.v
-vsim tb_gates
-add wave -r /*
-run -all
-quit
-```
-
-> 다른 예제를 돌리고 싶으면 소스 경로만 바꾸면 됩니다.
-> (또는 run.do 안에서 변수로 경로를 받아도 됩니다.)
-
----
-
-### 2.2 Vivado xsim (시뮬) – xsim.tcl
-> 위치: **flows/vivado/xsim.tcl**
-
-```tcl
-# Vivado xsim non-project simulation
-set src_rtl [file normalize "examples/01.gates/gates.v"]
-set src_tb  [file normalize "examples/01.gates/tb_gates.v"]
-set top_tb  "tb_gates"
-
-xvlog $src_rtl $src_tb
-xelab $top_tb -s ${top_tb}_sim --debug typical
-xsim  ${top_tb}_sim -runall
-```
-
-> GUI로 파형 보려면 마지막 줄을 `-gui -onfinish stop` 으로 바꿔서 실행해도 됩니다.
-
----
-
-### 2.3 Vivado 합성 – synth.tcl
-> 위치: **flows/vivado/synth.tcl**
-
-```tcl
-file mkdir build
-
-# 디자인 읽기 (필요에 따라 경로 수정)
-read_verilog examples/01.gates/gates.v
-# 핀 제약이 있다면:
-if {[file exists "examples/01.gates/xdc/gates.xdc"]} {
-  read_xdc examples/01.gates/xdc/gates.xdc
-}
-
-# 디바이스 파트 (Basys3)
-set_part xc7a35tcpg236-1
-
-# 합성
-synth_design -top gates
-write_checkpoint -force build/post_synth.dcp
-
-# 리포트
-report_utilization    -file build/util_synth.rpt
-report_timing_summary -file build/timing_synth.rpt
-
-exit
-```
-
----
-
-### 2.4 Vivado 배치/라우트/비트스트림 – bit.tcl
-> 위치: **flows/vivado/bit.tcl**
-
-```tcl
-file mkdir build
-
-# 소스/제약
-read_verilog examples/01.gates/gates.v
-if {[file exists "examples/01.gates/xdc/gates.xdc"]} {
-  read_xdc examples/01.gates/xdc/gates.xdc
-}
-
-# 디바이스 파트
-set_part xc7a35tcpg236-1
-
-# 합성 → 배치 → 라우트 → 비트스트림
-synth_design -top gates
-opt_design
-place_design
-route_design
-
-write_bitstream -force build/gates.bit
-report_timing_summary -file build/timing_impl.rpt
-
-exit
-```
-
----
-
-## 3) 사용 예 (루트에서 한 줄)
+### 2.1 Vivado xsim
 
 ```bash
-# 시뮬레이션
-make sim-xsim            # Vivado xsim
-make sim-msim            # ModelSim
+make xsim EX=examples/gate
+# 또는
+make xsim EX=gate
+```
 
-# 합성/비트
-make synth               # Post-Synth 리포트 생성
-make bit                 # gates.bit 생성
+- 동작:
+  - `EX/*.v` 와 `EX/tb_*.v` 를 찾아서
+  - `xsim.tcl`을 이용해 Vivado xsim으로 시뮬레이션 수행
+- 내부 형태(개념):
+  ```bash
+  vivado -mode tcl -source xsim.tcl -tclargs "<RTL들>" "<TB>" <TOP>
+  ```
 
-# 정리
+### 2.2 ModelSim / Questa (vsim)
+
+```bash
+make msim EX=examples/gate           # VSIM이 PATH에 있으면
+make msim EX=examples/gate VSIM=vsim # 명시적으로 지정 가능
+```
+
+- 동작:
+  - `run.do` 스크립트를 사용해서 컴파일 + vsim -c 실행
+- 내부에서는 DO 스크립트가
+  - `vlog $(RTL)` / `vlog $(TB)`
+  - `vsim -c $(TOP)`
+  를 수행하는 구조(예상).
+
+> `EX` 를 빼먹으면 Makefile이  
+> `Set EX=<example_dir> e.g., EX=gate` 라고 에러를 내고 종료한다.
+
+---
+
+## 3. 합성 / 구현 플로우 (Vivado)
+
+### 3.1 합성만 수행 (synth)
+
+```bash
+make synth EX=examples/gate DUT=gates
+# 보드를 바꾸고 싶으면
+make synth EX=examples/gate DUT=gates PART=xc7a100tcsg324-1
+```
+
+- 필수:
+  - `EX` : 예제 폴더
+  - `DUT` : Top 모듈명 (예: `gates`)
+- 옵션:
+  - `PART` : 디폴트는 `xc7a35tcpg236-1` (Basys3)
+  - `XDC`  : 기본은 `$(EX)/*.xdc`
+  - `OUT`  : 기본은 `build/$(notdir $(EX))`
+
+내부적으로:
+
+```bash
+vivado -mode batch -source synth.tcl   -tclargs $(DUT) $(PART) "$(RTL)" "$(XDC)" "$(OUT)"
+```
+
+결과:
+- `OUT` 폴더 아래에 합성 리포트(`util_*.rpt`, `timing_*.rpt`)와 DCP/netlist 생성.
+
+---
+
+### 3.2 구현 + 비트스트림 생성 (bit)
+
+```bash
+make bit EX=examples/gate DUT=gates
+```
+
+- 합성과 동일하게 `EX`, `DUT` 필요.
+- 필요하다면 `PART`, `XDC`, `OUT` 도 동일 방식으로 덮어쓰기 가능.
+
+내부적으로:
+
+```bash
+vivado -mode batch -source bit.tcl   -tclargs $(DUT) $(PART) "$(RTL)" "$(XDC)" "$(OUT)"
+```
+
+결과:
+- `OUT` 폴더에 `*.bit`, `*.ltx`, `*.dcp` 등 생성.
+
+---
+
+## 4. 결과 정리 (harvest) & 청소 (clean)
+
+### 4.1 결과 모으기 – `harvest`
+
+```bash
+make harvest EX=examples/gate
+```
+
+- 기본 저장 위치: `artifacts/<예제이름>/`
+  - 예: `EX=examples/gate` → `artifacts/gate/`
+
+폴더 구조:
+
+```text
+artifacts/gate/
+├─ sim/    # wdb, vcd 등 파형 파일
+├─ rpt/    # util_*.rpt, timing_*.rpt, drc*.rpt ...
+└─ impl/   # *.bit, *.ltx, *.dcp
+```
+
+하는 일:
+
+- 현재 디렉터리와 `OUT` 또는 `build` 아래를 검색해서
+  - `*.wdb`, `sim.vcd` → `sim/`
+  - `*.bit`, `*.ltx`, `*.dcp` → `impl/`
+  - `util_*.rpt`, `timing_*.rpt`, `drc*.rpt`, `reports/*.rpt` → `rpt/`
+- 마지막에 `Saved → artifacts/<예제>` 메시지 출력
+
+즉, **발표·보고용 결과만 따로 모으는 타깃**이다.
+
+---
+
+### 4.2 깨끗하게 지우기 – `clean`
+
+```bash
 make clean
 ```
 
----
+삭제 대상:
 
-## 4) 예제 바꿔 돌리기
+- `build/`
+- Vivado 관련: `*.log`, `*.jou`, `*.pb`, `xsim.dir`, `.Xil`, `.xil`
+- ModelSim 관련: `work/`, `transcript`, `vsim.wlf`, `*.wlf`
 
-- 한 레포에 여러 예제가 있을 때는 **flows 스크립트의 소스 경로**만 바꾸거나,
-- `examples/<name>/scripts/`에 예제 전용 xsim.tcl/run.do를 둔 뒤,
-  상위 Makefile에서 타깃을 분기할 수도 있습니다.
-
-예)
-
-```make
-sim-gates:
-	$(VIV) -mode tcl -source flows/vivado/xsim.tcl
-
-sim-adder:
-	$(VIV) -mode tcl -source examples/02.full_adder/scripts/xsim.tcl
-```
+> `artifacts/`는 지우지 않기 때문에, 결과 모아둔 곳은 그대로 남는다.
 
 ---
 
-## 5) 폴더 이름 추천
+## 5. 새 예제 추가할 때 체크리스트
 
-- 전역 도구 스크립트: **`flows/vivado`**, **`flows/modelsim`**
-- 보드 정의/제약: **`boards/`** (보드별 XDC, 노트)
-- 예제별 소스: **`examples/<index>.<name>/`**
-- 빌드 산출물: **`build/`** (Make clean으로 삭제)
+1. `examples/<이름>/` 폴더 만들기  
+2. RTL 파일(`*.v`)과 testbench(`tb_*.v`) 넣기  
+3. (보드 타깃이면) XDC 파일 1개 추가  
+4. Top 모듈 이름이 DUT와 testbench에서 일치하는지 확인  
+5. 필요하면 `examples/<이름>/example.mk` 작성:
+   ```make
+   DUT  = <top_module_name>
+   PART = xc7a35tcpg236-1
+   ```
+6. 아래 명령으로 테스트:
+   ```bash
+   make xsim    EX=examples/<이름>
+   make synth   EX=examples/<이름> DUT=<top>
+   make bit     EX=examples/<이름> DUT=<top>
+   make harvest EX=examples/<이름>
+   ```
 
-> 이미 레포에 `flows/`가 있으니 **그 안에 vivado/ modelsim 폴더를 만들고** 이 문서의 스크립트들을 넣는 방식을 권장합니다.
-
----
-
-## 6) 팁 (실무 감각)
-
-- GUI는 디버깅용, 정식 실행은 **배치/로그/리포트 자동 산출**.
-- xsim 파형은 `xelab --debug typical` 필수.
-- ModelSim은 `vlog +acc`, `add wave -r /*` 습관화.
-- CI가 가능하면 iverilog/verilator로 문법·연결 스모크 테스트 추가.
+이 파일은 README나 `doc/flow.md`에 그대로 복사해서 사용할 수 있는 형태로 작성되었다.
