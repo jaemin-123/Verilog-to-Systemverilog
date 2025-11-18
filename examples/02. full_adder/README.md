@@ -1,125 +1,89 @@
-# full_adder
-> Board: Digilent Basys3 (XC7A35T-1CPG236C)  
-> Vivado: 2022.2  
-> Language: Verilog HDL
+# 02. Full Adder – 1-bit 가산기
 
-<img width="716" height="326" alt="image" src="https://github.com/user-attachments/assets/163d5b69-bf32-4101-afa5-7f3cd0c075c8" />
+> Basys3 (XC7A35T-1CPG236C) · Vivado 2022.2 · Language: Verilog / SystemVerilog
 
 ---
 
-### Truth Table
-| iX | iY | iCIN | oSUM | oCARRY |
-|:-:|:-:|:-:|:-:|:-:|
-| 0 | 0 | 0 | 0 | 0 |
-| 0 | 1 | 0 | 1 | 0 |
-| 1 | 0 | 0 | 1 | 0 |
-| 1 | 1 | 0 | 0 | 1 |
-| 0 | 0 | 1 | 1 | 0 |
-| 0 | 1 | 1 | 0 | 1 |
-| 1 | 0 | 1 | 0 | 1 |
-| 1 | 1 | 1 | 1 | 1 |
+## 1. 예제 개요
 
-### 핀 매핑 (Basys3)
-| HDL Port | Basys3 Pin | IO Std   | 보드 리소스 |
-|---|---|---|---|
-| iX      | V17 | LVCMOS33 | SW0  |
-| iY      | V16 | LVCMOS33 | SW1  |
-| iCIN    | W16 | LVCMOS33 | SW2  |
-| oSUM    | U16 | LVCMOS33 | LED0 |
-| oCARRY  | E19 | LVCMOS33 | LED1 |
-- full_adder module 코드
+- 입력 `iX`, `iY`, `iCIN`(Carry-In)을 받아서
+  - 합(`oSUM`)
+  - 자리올림(`oCARRY`)
+  를 만드는 **1-bit 풀가산기** 예제
+- 내부에서 보조 신호 `s0`, `c0`, `c1`을 이용해
+  - XOR + AND + OR 게이트 조합으로 풀가산기를 구성
 
 ---
 
+## 2. 블록 다이어그램
+
+```text
+examples/02.full_adder/images/block.png
 ```
-// src/full_adder.v
-module full_adder (iX, iY, iCIN, oSUM, oCARRY);
 
-    input iX, iY, iCIN;
-    output oSUM, oCARRY;
+![Full Adder block diagram](./images/block.png)
 
-    reg s0, c0, c1;
-    reg sum, carry;
+게이트 구성 (예시)
 
-    assign oSUM = sum;
-    assign oCARRY = carry;
-
-    always @(iX or iY or iCIN) begin
-        s0 = iX ^ iY;
-        c0 = iX & iY;
-        c1 = s0 & iCIN;
-        sum = s0 ^ iCIN;
-        carry = c0 | c1;
-    end
-endmodule
-```
+- `U0` : `iX` ⊕ `iY` → `s0`
+- `U1` : `iX` · `iY` → `c0`
+- `U2` : `s0` ⊕ `iCIN` → `oSUM`
+- `U3` : `s0` · `iCIN` → `c1`
+- `U4` : `c0` + `c1` → `oCARRY`
 
 ---
 
-- test bench
-```
-// tb/tb_full_adder.v
-`timescale 1ns/1ps
+## 3. 시뮬레이션 파형
 
-module tb_full_adder;
-    reg iX, iY, iCIN;
-    wire oSUM, oCARRY;
-    
-    full_adder UFA(
-        .iX (iX),
-        .iY (iY),
-        .iCIN (iCIN),
-        .oSUM (oSUM),
-        .oCARRY (oCARRY));
-    
-    initial begin
-        iX = 0; iY = 0; iCIN = 0; #100;
-        iX = 1; iY = 0; iCIN = 0; #100;
-        iX = 0; iY = 1; iCIN = 0; #100;
-        iX = 1; iY = 1; iCIN = 0; #100;
-        iX = 0; iY = 0; iCIN = 1; #100;
-        iX = 1; iY = 0; iCIN = 1; #100;
-        iX = 0; iY = 1; iCIN = 1; #100;
-        iX = 1; iY = 1; iCIN = 1; #100;
-    end
-endmodule
+```text
+examples/02.full_adder/images/wave.png
 ```
+
+![Full Adder simulation waveform](./images/wave.png)
+
+- 입력 조합(`iX`, `iY`, `iCIN`)을 000 → 001 → 010 → 011 → 100 → 101 → 110 → 111 순서로 변화
+- 각 입력에 대해 `oSUM`, `oCARRY`가 트루스 테이블과 일치하는지 확인
 
 ---
 
-- `.xdc` 설정
-```
-# xdc/full_adder.xdc
-## Switches
-set_property -dict { PACKAGE_PIN V17   IOSTANDARD LVCMOS33 } [get_ports {iX}]
-set_property -dict { PACKAGE_PIN V16   IOSTANDARD LVCMOS33 } [get_ports {iY}]
-set_property -dict { PACKAGE_PIN W16   IOSTANDARD LVCMOS33 } [get_ports {iCIN}]
+## 4. 파일 구성
 
-## LEDs
-set_property -dict { PACKAGE_PIN U16   IOSTANDARD LVCMOS33 } [get_ports {oSUM}]
-set_property -dict { PACKAGE_PIN E19   IOSTANDARD LVCMOS33 } [get_ports {oCARRY}]
+```text
+examples/02.full_adder/
+├─ full_adder.v      # Verilog RTL
+├─ full_adder_sv.sv  # SystemVerilog RTL (옵션)
+├─ tb_full_adder.v   # 공통 테스트벤치
+├─ images/
+│  ├─ block.png      # 블록 다이어그램
+│  └─ wave.png       # 시뮬레이션 파형
+└─ README.md         # 이 문서
 ```
+
+- `full_adder.v`  
+  - 게이트 조합으로 1-bit 풀가산기 구현
+- `full_adder_sv.sv`  
+  - 같은 기능을 SystemVerilog 스타일로 작성한 버전 (있으면)
+- `tb_full_adder.v`  
+  - 3비트 입력(000~111) 전체 패턴을 적용해서 `oSUM`, `oCARRY`를 검증
+- `images/*.png`  
+  - 포트폴리오 / 문서용 그림
+
+핀맵(XDC), 시뮬레이션/합성/비트스트림 플로우는  
+레포 루트의 공통 문서(`README.md`, `doc/flow.md` 등)를 참고.
 
 ---
 
-- Schematic
-<img width="1029" height="312" alt="image" src="https://github.com/user-attachments/assets/5bf27d4e-7f46-4532-9640-82a6d5acc661" />
+## 5. 실행 요약
 
----
+레포 **루트**에서 아래처럼 실행한다고 가정.
 
-- Device layout
-<img width="174" height="411" alt="image" src="https://github.com/user-attachments/assets/594c3604-1f33-4fb7-950d-01d6d2a73827" />
+```bash
+# Vivado xsim 시뮬레이션 (콘솔)
+$ make xsim EX=examples/02.full_adder
 
----
-
-- SIMULATION
-<img width="464" height="202" alt="image" src="https://github.com/user-attachments/assets/2537c6c9-b43c-4387-b752-d5df36c46770" />
-
----
-
-# `.tcl` 사용법
-- 터미널에서 `.tcl`이 있는 폴더에서 실행
-```
-vivado -mode batch -source full_adder.tcl
+# Vivado xsim GUI
+$ make xsim_gui EX=examples/02.full_adder
 ```
 
+보드 다운로드, ModelSim 사용, Vivado 합성/비트스트림 플로우는  
+공통 가이드에 정리하고, 각 예제 README에서는 이 정도 요약만 남기는 구조로 사용.
