@@ -30,6 +30,9 @@ SYN_TCL  := $(CURDIR)/synth.tcl
 BIT_TCL  := $(CURDIR)/bit.tcl
 RUN_DO   := $(CURDIR)/run.do
 
+
+XSIM_OPTS ?=
+
 .PHONY: help msim xsim synth bit clean
 
 help:
@@ -50,7 +53,11 @@ xsim:
 	@test -n "$(TB)" || (echo "ERROR: Testbench not found: $(EX)/tb_*.v"; exit 1)
 	@echo "[XSIM] EX=$(EX)  TB=$(TB)  TOP=$(TOP)"
 	$(VIV) -mode tcl -nolog -nojournal -notrace \
-	  -source "$(XSIM_TCL)" -tclargs "$(RTL)" "$(TB)" $(TOP)
+	  -source "$(XSIM_TCL)" -tclargs "$(RTL)" "$(TB)" $(TOP) $(XSIM_OPTS)
+
+# -------- Vivado xsim_gui (simulation) --------
+xsim_gui:
+	$(MAKE) xsim EX=$(EX) XSIM_OPTS=--gui
 
 # -------- Vivado synthesis --------
 synth:
@@ -68,9 +75,6 @@ bit:
 
 clean:
 	-@rm -rf build *.log *.jou *.pb xsim.dir .Xil .xil work transcript vsim.wlf *.wlf
-
-.PHONY: harvest
-ART ?= artifacts/$(notdir $(EX))
 
 .PHONY: harvest
 ART ?= artifacts/$(notdir $(EX))
