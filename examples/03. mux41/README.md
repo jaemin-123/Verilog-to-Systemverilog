@@ -69,7 +69,7 @@ $ make xsim_gui EX=mux41
 
 ---
 
-## 6. Verilog vs SystemVerilog (이 예제에서)
+## 6. Verilog vs SystemVerilog
 
 - 기능은 동일하게 **4:1 멀티플렉서** (iSEL에 따라 iA/iB/iC/iD 중 하나를 oOUT으로 선택).
 - Verilog:
