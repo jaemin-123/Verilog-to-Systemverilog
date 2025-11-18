@@ -20,7 +20,7 @@
 
 ## 2. 블록 다이어그램
 
-<img width="600" alt="bin2bcd block" src="./images/block.png" />
+<img width="758" height="237" alt="image" src="https://github.com/user-attachments/assets/4ebfc647-627c-44a4-9e08-cf09649ea6f7" />
 
 - 입력: `iBIN[13:0]`  
 - 출력: `oBCD[15:0]` (각 4비트가 천/백/십/일 자리를 의미)
@@ -32,7 +32,7 @@
 
 ## 3. 시뮬레이션 파형
 
-<img width="1500" alt="bin2bcd waveform" src="./images/wave.png" />
+<img width="1575" height="80" alt="image" src="https://github.com/user-attachments/assets/dd726b6e-004f-49b6-837e-0aeea1df404e" />
 
 - `iBIN` 값을 0,1,2,3,… 순서로 증가시키면서
   - `oBCD`가 10진수 표현(BCD)으로 제대로 변환되는지 확인
@@ -101,3 +101,60 @@ $ make harvest EX=bin2bcd
 - `DUT=top_module` : 실제 FPGA에 올릴 Top 모듈 이름
 - 비트스트림은 `build/bin2bcd/` 또는 `artifacts/bin2bcd/impl/` 에 생성된다고 가정
 
+---
+
+---
+
+## 7. Verilog vs SystemVerilog (이 예제에서)
+
+### 1) `bin2bcd` (8bit → 3자리 BCD 변환)
+
+- **Verilog 버전 (`bin2bcd.v`)**
+  - 포트 선언  
+    - `input [7:0] iBIN;`  
+    - `output [11:0] oBCD;`
+  - 내부 신호  
+    - `reg [11:0] bcd;`  
+    - `integer i;`
+  - 구조  
+    - `always @(iBIN)`에서 double-dabble 알고리즘 수행  
+    - 마지막에 `assign oBCD = bcd;` 로 출력 연결
+
+- **SystemVerilog 버전 (`bin2bcd_sv.sv`)**
+  - ANSI 스타일 포트  
+    - `input  logic [7:0]  iBIN`  
+    - `output logic [11:0] oBCD`
+  - 내부 신호  
+    - `logic [11:0] bcd;`  
+    - `int i;`
+  - 블록 스타일  
+    - `always_comb` 사용해서 **조합 로직**임을 명확하게 표현  
+    - 파일 앞뒤에 ``default_nettype none`` / ``default_nettype wire`` 추가해서  
+      오타로 인한 암시적 net 생성 방지
+
+---
+
+### 2) 14bit BCD + 7-Segment Top (`top_bin2bcd` 계열)
+
+- **Verilog 버전 (`top_bin2bcd.v`)**
+  - 같은 파일 안에 여러 모듈 포함  
+    - 14비트용 `bin2bcd`  
+    - `seven_seg_decoder`  
+    - `bin_to_7seg_display`  
+    - `test`  
+    - `top_module`
+  - `reg` + `always @(iBIN)` / `always @(posedge clk or posedge reset)` 방식으로  
+    전통적인 Verilog 스타일 조합/순차 로직 작성
+
+- **SystemVerilog 버전 (`top_bin2bcd_sv.sv`)**
+  - 포트/내부 신호를 전부 `logic`으로 통일  
+  - 클록·리셋이 걸리는 부분은 `always_ff @(posedge clk …)`  
+    조합 부분은 `always_comb`로 분리해서 읽기가 더 편한 형태
+  - 디스플레이 선택, 클록 분주기 같은 상태 레지스터는 `always_ff`에서만 갱신  
+    → 조합/순차 로직이 명확하게 구분되는 구조
+  - `seven_seg_decoder`에서 `unique case` 사용해서 digit 코드 누락을 툴이 체크할 수 있는 형태
+
+> 동작 자체는 Verilog / SystemVerilog 버전이 동일하게  
+> **Binary → BCD 변환 → 7-segment 표시**를 수행하고,  
+> SystemVerilog 쪽은 타입(`logic`)과 블록(`always_comb` / `always_ff`)을 정리해서  
+> RTL 의도와 구조가 더 잘 드러나는 스타일.
