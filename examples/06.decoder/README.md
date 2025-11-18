@@ -64,3 +64,17 @@ $ make xsim EX=decoder
 # Vivado xsim GUI
 $ make xsim_gui EX=decoder
 ```
+
+---
+
+## 6. Verilog vs SystemVerilog
+
+- 기능은 동일하게 **4비트 입력 → 10비트 one-hot 출력으로 변환하는 4-to-10 디코더**.
+- Verilog:
+  - `reg [9:0] out;` 선언 후 `always @(iIN)`에서 `out`을 갱신하고,
+    마지막에 `assign oOUT = out;` 로 출력에 연결.
+- SystemVerilog:
+  - ANSI 포트 스타일 (`input logic [3:0] iIN`, `output logic [9:0] oOUT`).
+  - 중간 레지스터 없이 `oOUT`를 `logic`으로 선언하고 `always_comb` 안에서 바로 대입.
+  - `unique case (iIN)`을 사용해서 입력 코드 케이스를 명확히 나열하고,
+    파일 상단에 ``default_nettype none``을 넣어 오타 난 신호가 암시적으로 생성되지 않도록 막는 스타일.
