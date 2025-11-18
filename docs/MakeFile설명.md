@@ -300,6 +300,3 @@ $ make bit EX=gate DUT=gates
 # 결과물 수집
 $ make harvest EX=gate
 ```
-
-`artifacts/gate/` 아래에 모인 파일들을  
-보고서 / 포트폴리오에 그대로 활용할 수 있음.
