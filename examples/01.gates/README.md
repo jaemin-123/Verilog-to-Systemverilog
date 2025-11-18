@@ -8,7 +8,6 @@
 
 - 두 입력 `iA`, `iB`에 대해 AND, OR, NOT, NAND 출력을 만드는 가장 기본적인 조합논리 예제
 - 동일 기능을 Verilog / SystemVerilog로 작성해서 비교하는 베이스 예제
-- 이후 MUX, 카운터, UART 같은 다른 예제들도 **제목/이미지/파일명만 바꿔서** 같은 형태로 정리하는 것을 목표
 
 ---
 
@@ -18,7 +17,7 @@
 examples/01.gates/images/block.png
 ```
 
-![Gates block diagram](./images/block.png)
+<img width="536" height="574" alt="image" src="https://github.com/user-attachments/assets/38d1fcc7-bb76-4db9-9e66-1937c3eef3fa" />
 
 게이트 구성
 
@@ -36,7 +35,7 @@ examples/01.gates/images/block.png
 examples/01.gates/images/wave.png
 ```
 
-![Gates simulation waveform](./images/wave.png)
+<img width="1278" height="213" alt="image" src="https://github.com/user-attachments/assets/6f42066f-96ca-4300-b399-23b083d3070b" />
 
 - `iA`, `iB` 입력을 00 → 01 → 10 → 11 순서로 변화
 - 각 출력(`oAND`, `oOR`, `oNOT`, `oNAND`, `oNAND2`)이 트루스 테이블과 일치하는지 확인
