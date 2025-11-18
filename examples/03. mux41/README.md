@@ -66,3 +66,23 @@ $ make xsim EX=mux41
 # Vivado xsim GUI
 $ make xsim_gui EX=mux41
 ```
+
+---
+
+## 6. Verilog vs SystemVerilog (이 예제에서)
+
+- 기능은 동일하게 **4:1 멀티플렉서** (iSEL에 따라 iA/iB/iC/iD 중 하나를 oOUT으로 선택).
+- Verilog:
+  - 비-ANSI 포트 스타일 + 기본 `wire` 타입
+  - 삼항 연산자 한 줄로 MUX 표현  
+    ```verilog
+    assign oOUT = (iSEL == 0) ? iA :
+                  (iSEL == 1) ? iB :
+                  (iSEL == 2) ? iC : iD;
+    ```
+- SystemVerilog:
+  - ANSI 포트 스타일 (`input logic [7:0] ...`, `output logic [7:0] oOUT`)
+  - `always_comb` + `unique case`로 MUX를 표현해서  
+    선택 신호에 대한 경우의 수가 **명시적으로 드러나고 누락/중복 체크에 유리**한 스타일.
+  - 파일 상단에 ``default_nettype none``을 사용해서  
+    오타 난 신호가 암시적으로 생성되지 않도록 막는 패턴을 함께 사용.
