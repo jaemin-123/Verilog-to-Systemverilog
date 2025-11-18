@@ -1,150 +1,68 @@
-# mux41
-> Board: Digilent Basys3 (XC7A35T-1CPG236C)  
-> Vivado: 2022.2  
-> Language: Verilog HDL
+# 03. Multiplexer – 4-to-1 8-bit MUX
 
-<img width="474" height="283" alt="image" src="https://github.com/user-attachments/assets/ff032d51-910c-480d-a2fe-6e0c6db1d5a8" />
-
+> Basys3 (XC7A35T-1CPG236C) · Vivado 2022.2 · Language: Verilog / SystemVerilog
 
 ---
 
-### Truth Table
-| iA | iB | iC | iD | iSEL | oOUT |
-|---|---|---|---|---|---|
-| iA | iB | iC | iD | 00 | iA |
-| iA | iB | iC | iD | 01 | iB |
-| iA | iB | iC | iD | 10 | iC |
-| iA | iB | iC | iD | 11 | iD |
-- 입력 1비트 iSEL 2비트
+## 1. 예제 개요
 
-### 핀 매핑 (Basys3)
-| HDL Port | Basys3 Pin | IO Std   | 보드 리소스 |
-|---|---|---|---|
-| iSEL_sw[0] | V17 | LVCMOS33 | SW0  |
-| iSEL_sw[1] | V16 | LVCMOS33 | SW1  |
-| LED0  | U16 | LVCMOS33 | LED0 |
-| BTN_A | U18 | LVCMOS33 | btnC |
-| BTN_B | T18 | LVCMOS33 | btnU |
-| BTN_C | W19 | LVCMOS33 | btnL |
-| BTN_D | T17 | LVCMOS33 | btnR |
-- mux41 module 코드
-  - A, B, C, D 각 8개씩 `.xdc` 설정 못함
-  - 상위 7비트 0, 첫번째 비트만 버튼으로 입력
+- 8비트 입력 `iA`, `iB`, `iC`, `iD` 중에서  
+  2비트 선택 신호 `iSEL[1:0]`에 따라 하나를 고르는 **4-to-1 멀티플렉서** 예제
+- 동일 기능을 Verilog / SystemVerilog로 작성해서 비교하는 목적
 
 ---
 
-```
-// src/mux41.v
-module mux41a(iA, iB, iC, iD, iSEL, oOUT);
-    input [7:0] iA, iB, iC, iD;
-    input [1:0] iSEL;
-    output [7:0] oOUT;
-    
-    assign oOUT = (iSEL == 0) ? iA:
-                (iSEL == 1) ? iB:
-                (iSEL == 2) ? iC : iD;
-endmodule
+## 2. 블록 다이어그램
 
-module mux41(
-  input  wire [1:0] iSEL_sw, // SW1:MSB, SW0:LSB
-  input  wire BTN_A,         // -> iA[0]
-  input  wire BTN_B,         // -> iB[0]
-  input  wire BTN_C,         // -> iC[0]
-  input  wire BTN_D,         // -> iD[0]
-  output wire LED0           // oOUT[0]만 표시
-);
-  // 8비트 입력을 최소화: 상위 7비트는 0, LSB는 버튼
-  wire [7:0] iA = {7'b0, BTN_A};
-  wire [7:0] iB = {7'b0, BTN_B};
-  wire [7:0] iC = {7'b0, BTN_C};
-  wire [7:0] iD = {7'b0, BTN_D};
+<img width="360" alt="mux block" src="./images/block.png" />
 
-  wire [7:0] oOUT;
-
-  mux41a U0(
-    .iA(iA), 
-    .iB(iB), 
-    .iC(iC), 
-    .iD(iD),
-    .iSEL(iSEL_sw),
-    .oOUT(oOUT)
-  );
-
-  assign LED0 = oOUT[0]; // LSB만 LED로 확인
-endmodule
-```
+- `iA[7:0]`, `iB[7:0]`, `iC[7:0]`, `iD[7:0]` : 4개의 8비트 입력
+- `iSEL[1:0]` : 선택 신호
+  - `00` → `iA`
+  - `01` → `iB`
+  - `10` → `iC`
+  - `11` → `iD`
+- `oOUT[7:0]` : 선택된 입력이 전달되는 출력
 
 ---
 
-- test bench
-```
-// tb/tb_mux41.v
-`timescale 1ns/10ps
+## 3. 시뮬레이션 파형
 
-module tb_mux41 
-    reg [7:0] iA, iB, iC, iD;
-    reg [1:0] iSEL;
-    wire [7:0] oOUT;
+<img width="1280" alt="mux waveform" src="./images/wave.png" />
 
-    mux41a U0 (
-        .iA (iA),
-        .iB (iB),
-        .iC (iC),
-        .iD (iD),
-        .iSEL (iSEL),
-        .oOUT (oOUT));
-    
-    initial begin 
-        iA = 8'h00; iB = 8'h01; iC = 8'h00; iD = 8'h00; iSEL = 2'b00; #100
-        iA = 8'h00; iB = 8'h01; iC = 8'h00; iD = 8'h00; iSEL = 2'b01; #100
-        iA = 8'h00; iB = 8'h01; iC = 8'h00; iD = 8'h00; iSEL = 2'b10; #100
-        iA = 8'h00; iB = 8'h01; iC = 8'h00; iD = 8'h00; iSEL = 2'b11; #100
-    end
-    
-endmodule
-```
+- 각 입력에 고정된 값을 넣고  
+  `iSEL` 값을 `00 → 01 → 10 → 11` 순서로 바꿔가며 동작 확인
+- `iSEL` 값에 따라 `oOUT`이 각각 `iA`, `iB`, `iC`, `iD` 값으로 바뀌는지 확인
 
 ---
 
-- `.xdc` 설정
-```
-# xdc/mux41.xdc
-## Switches
-set_property -dict { PACKAGE_PIN V17   IOSTANDARD LVCMOS33 } [get_ports {iSEL_sw[0]}]
-set_property -dict { PACKAGE_PIN V16   IOSTANDARD LVCMOS33 } [get_ports {iSEL_sw[1]}]
+## 4. 파일 구성
 
-## LEDs
-set_property -dict { PACKAGE_PIN U16   IOSTANDARD LVCMOS33 } [get_ports {LED0}]
-
-##Buttons
-set_property -dict { PACKAGE_PIN U18   IOSTANDARD LVCMOS33 } [get_ports {BTN_A}] 
-set_property -dict { PACKAGE_PIN T18   IOSTANDARD LVCMOS33 } [get_ports {BTN_B}] 
-set_property -dict { PACKAGE_PIN W19   IOSTANDARD LVCMOS33 } [get_ports {BTN_C}] 
-set_property -dict { PACKAGE_PIN T17   IOSTANDARD LVCMOS33 } [get_ports {BTN_D}]
+```text
+examples/03.mux41/
+├─ mux41.v           # Verilog RTL (4-to-1 8bit MUX)
+├─ mux41_sv.sv       # SystemVerilog RTL (옵션)
+├─ tb_mux41.v        # 공통 테스트벤치
+└─ README.md        # 이 문서
 ```
+
+- `mux41.v`  
+  - case문 또는 삼항연산자를 이용해 4:1 멀티플렉서 구현
+- `mux41_sv.sv`  
+  - 같은 기능을 SystemVerilog 스타일(`logic`, `always_comb` 등)로 작성한 버전 (있으면)
+- `tb_mux41.v`  
+  - `iSEL`을 0~3으로 바꾸면서 `oOUT`이 해당 입력과 같은지 검증
 
 ---
 
-- Schematic
-<img width="821" height="464" alt="image" src="https://github.com/user-attachments/assets/96e9232e-b07d-4c1a-a5e9-ad8ba3a05711" />
+## 5. 실행 요약
 
----
+레포 **루트**에서 아래처럼 실행한다고 가정.
 
-- Device layout
-<img width="269" height="364" alt="image" src="https://github.com/user-attachments/assets/0c327833-0ffc-4fe0-b14c-7796b5ac7ca7" />
+```bash
+# Vivado xsim 시뮬레이션 (콘솔)
+$ make xsim EX=mux41
 
----
-
-- SIMULATION
-<img width="670" height="226" alt="image" src="https://github.com/user-attachments/assets/c5a7eddf-11f0-4ad6-ba9d-0eb5e5d496b4" />
-
-
----
-
-# `.tcl` 사용법
-- 터미널에서 `.tcl`이 있는 폴더에서 실행
+# Vivado xsim GUI
+$ make xsim_gui EX=mux41
 ```
-vivado -mode batch -source mux41.tcl
-```
-
-
