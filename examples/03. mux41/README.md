@@ -14,7 +14,7 @@
 
 ## 2. 블록 다이어그램
 
-<img width="360" alt="mux block" src="./images/block.png" />
+<img width="538" height="317" alt="image" src="https://github.com/user-attachments/assets/a5891b5d-e059-402d-9464-f7c729c9d32b" />
 
 - `iA[7:0]`, `iB[7:0]`, `iC[7:0]`, `iD[7:0]` : 4개의 8비트 입력
 - `iSEL[1:0]` : 선택 신호
@@ -28,7 +28,7 @@
 
 ## 3. 시뮬레이션 파형
 
-<img width="1280" alt="mux waveform" src="./images/wave.png" />
+<img width="1286" height="179" alt="image" src="https://github.com/user-attachments/assets/b931aca9-a657-458f-b39f-a8c8caee99ee" />
 
 - 각 입력에 고정된 값을 넣고  
   `iSEL` 값을 `00 → 01 → 10 → 11` 순서로 바꿔가며 동작 확인
