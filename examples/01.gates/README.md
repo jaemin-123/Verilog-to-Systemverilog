@@ -64,9 +64,6 @@ examples/01.gates/
 - `images/*.png`  
   - 포트폴리오 / 문서용 그림
 
-핀맵(XDC), 시뮬레이션/합성/비트스트림 플로우는  
-레포 루트의 공통 문서(`README.md`, `doc/flow.md` 등)를 참고.
-
 ---
 
 ## 5. 실행 요약
@@ -75,11 +72,8 @@ examples/01.gates/
 
 ```bash
 # Vivado xsim 시뮬레이션 (콘솔)
-make xsim EX=examples/01.gates
+make xsim EX=gate
 
 # Vivado xsim GUI
-make xsim_gui EX=examples/01.gates
+make xsim_gui EX=gate
 ```
-
-보드 다운로드, ModelSim 사용, Vivado 합성/비트스트림 플로우는  
-공통 가이드에 정리하고, 각 예제 README에서는 이 정도 요약만 남기는 구조로 사용.
