@@ -70,3 +70,18 @@ $ make xsim EX=ALU
 $ make xsim_gui EX=ALU
 ```
 
+---
+
+## Verilog vs SystemVerilog (이 예제에서)
+
+- 기능은 동일하게 **4비트 입력 + 4비트 opcode로 8비트 결과를 내는 조합논리 ALU**.
+- Verilog:
+  - 비-ANSI 포트 스타일 + `reg [7:0] result;` 선언
+  - `always @(iA or iB or iINST)` 로 조합논리 블록 작성
+  - 마지막에 `assign oRESULT = result;` 로 출력에 연결
+- SystemVerilog:
+  - ANSI 포트 스타일 (`input logic [3:0] ...`, `output logic [7:0] oRESULT`)
+  - 내부 레지스터 없이, `oRESULT`를 `logic`으로 선언하고 `always_comb` 안에서 직접 대입
+  - `unique case (iINST)` 를 사용해서 opcode 누락/중복을 도구가 체크할 수 있게 하고,
+  - 파일 상단에 ``default_nettype none`` 을 둬서 오타 난 신호가 암시적으로 생성되지 않도록 막는 스타일
+
