@@ -20,5 +20,7 @@ module tb_full_adder;
         iX = 1; iY = 0; iCIN = 1; #100;
         iX = 0; iY = 1; iCIN = 1; #100;
         iX = 1; iY = 1; iCIN = 1; #100;
+        $finish;
     end
+
 endmodule
