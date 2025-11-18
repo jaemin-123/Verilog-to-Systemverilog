@@ -64,3 +64,18 @@ $ make xsim EX=encoder
 # Vivado xsim GUI
 $ make xsim_gui EX=encoder
 ```
+
+---
+
+## 6. Verilog vs SystemVerilog 
+
+- 기능은 동일하게 **10비트 one-hot 입력 → 4비트 코드로 변환하는 10-to-4 인코더**.
+- Verilog:
+  - `reg [3:0] out;` 선언 후, `always @(iIN)`에서 `out`을 갱신하고  
+    마지막에 `assign oOUT = out;` 로 출력에 연결.
+- SystemVerilog:
+  - 순수 조합 회로라는 걸 드러내기 위해 **포트에서 `clk` 제거**.
+  - ANSI 포트 스타일 (`input logic [9:0] iIN`, `output logic [3:0] oOUT`).
+  - `always_comb` + `unique case (iIN)` 으로 작성해서  
+    인코더의 입력 패턴이 명시적으로 보이고, 케이스 누락/중복을 도구가 체크할 수 있는 스타일.
+  - 파일 상단에 ``default_nettype none``을 사용해서 오타 난 신호가 자동으로 `wire`로 생성되지 않도록 막는 패턴을 함께 사용.
