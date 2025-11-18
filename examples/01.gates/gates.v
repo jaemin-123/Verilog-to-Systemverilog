@@ -30,4 +30,5 @@ module gates (
   and U4 (s0, iA, iB);
   not U5 (oNAND2, s0);
 endmodule
+
 `default_nettype wire
