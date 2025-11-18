@@ -66,9 +66,7 @@
 ```text
 examples/07.bin2bcd/
 ├─ bin2bcd.v              # Binary → BCD 변환 (shift‑add‑3 알고리즘)
-├─ seven_seg_decoder.v    # 1자리 BCD → 7-seg 패턴
-├─ bin_to_7seg_display.v  # 4자리 BCD → 4개의 7-seg 멀티플렉싱
-├─ top_module.v           # Basys3용 Top (스위치/버튼/7세그 연결)
+├─ top_bin2bcd.v           # Basys3용 Top (스위치/버튼/7세그 연결)
 ├─ tb_bin2bcd.v           # (옵션) bin2bcd 단위 시뮬레이션용 테스트벤치
 ├─ bin2bcd_basys3.xdc     # Basys3 핀 제약
 └─ README.md              # 이 문서
@@ -90,8 +88,8 @@ $ make xsim EX=bin2bcd
 $ make xsim_gui EX=bin2bcd
 
 # 3) 합성/비트스트림 (Top 모듈 이름이 top_module인 경우)
-$ make synth EX=bin2bcd DUT=top_module
-$ make bit   EX=bin2bcd DUT=top_module
+$ make synth EX=bin2bcd DUT=top_bin2bcd
+$ make bit   EX=bin2bcd DUT=top_bin2bcd
 
 # 4) bit 파일만 모으기 (옵션)
 $ make harvest EX=bin2bcd
