@@ -72,3 +72,19 @@ $ make xsim EX=full_adder
 # Vivado xsim GUI
 $ make xsim_gui EX=full_adder
 ```
+
+---
+
+---
+
+## 6. Verilog vs SystemVerilog
+
+- 기능은 동일하게 **1-bit 풀가산기** (X, Y, CIN → SUM, CARRY) 구현.
+- Verilog:
+  - 비-ANSI 포트 스타일 + `reg` 사용
+  - `always @(iX or iY or iCIN)` 으로 조합논리 블록 작성
+- SystemVerilog:
+  - ANSI 포트 스타일 (`input logic`, `output logic`)
+  - 내부/출력 모두 `logic` 타입으로 통일
+  - `always_comb` 사용해서 “조합논리 블록”이라는 의도를 명확히 표현
+  - `default_nettype none`로 오타난 신호가 암시적으로 생성되지 않도록 막는 스타일
