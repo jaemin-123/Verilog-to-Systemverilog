@@ -77,3 +77,13 @@ make xsim EX=gate
 # Vivado xsim GUI
 make xsim_gui EX=gate
 ```
+
+---
+
+---
+
+## 6. Verilog vs SystemVerilog
+
+- 두 코드 모두 완전히 같은 조합 논리(AND/OR/NOT/NAND2) 구현.
+- Verilog: 비-ANSI 포트 스타일, 타입 생략 시 암시적 `wire`.
+- SystemVerilog: ANSI 포트(`input logic`, `output logic`), 파일 맨 위에 ``default_nettype none`` 넣어서 오타를 막는 스타일.
