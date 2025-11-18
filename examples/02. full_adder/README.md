@@ -17,11 +17,8 @@
 
 ## 2. 블록 다이어그램
 
-```text
-examples/02.full_adder/images/block.png
-```
+<img width="641" height="289" alt="image" src="https://github.com/user-attachments/assets/50034047-537f-4c7a-a244-23b41a9136be" />
 
-![Full Adder block diagram](./images/block.png)
 
 게이트 구성 (예시)
 
@@ -35,11 +32,7 @@ examples/02.full_adder/images/block.png
 
 ## 3. 시뮬레이션 파형
 
-```text
-examples/02.full_adder/images/wave.png
-```
-
-![Full Adder simulation waveform](./images/wave.png)
+<img width="1278" height="164" alt="image" src="https://github.com/user-attachments/assets/07ce112e-74e0-4932-9740-0ece8531ade1" />
 
 - 입력 조합(`iX`, `iY`, `iCIN`)을 000 → 001 → 010 → 011 → 100 → 101 → 110 → 111 순서로 변화
 - 각 입력에 대해 `oSUM`, `oCARRY`가 트루스 테이블과 일치하는지 확인
@@ -65,11 +58,6 @@ examples/02.full_adder/
   - 같은 기능을 SystemVerilog 스타일로 작성한 버전 (있으면)
 - `tb_full_adder.v`  
   - 3비트 입력(000~111) 전체 패턴을 적용해서 `oSUM`, `oCARRY`를 검증
-- `images/*.png`  
-  - 포트폴리오 / 문서용 그림
-
-핀맵(XDC), 시뮬레이션/합성/비트스트림 플로우는  
-레포 루트의 공통 문서(`README.md`, `doc/flow.md` 등)를 참고.
 
 ---
 
@@ -79,11 +67,8 @@ examples/02.full_adder/
 
 ```bash
 # Vivado xsim 시뮬레이션 (콘솔)
-$ make xsim EX=examples/02.full_adder
+$ make xsim EX=full_adder
 
 # Vivado xsim GUI
-$ make xsim_gui EX=examples/02.full_adder
+$ make xsim_gui EX=full_adder
 ```
-
-보드 다운로드, ModelSim 사용, Vivado 합성/비트스트림 플로우는  
-공통 가이드에 정리하고, 각 예제 README에서는 이 정도 요약만 남기는 구조로 사용.
