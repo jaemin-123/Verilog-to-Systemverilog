@@ -1,5 +1,5 @@
 # ==== Tools (경로가 PATH에 없으면 실행 시 VIV=..., VSIM=... 로 지정) ====
-VIV  ?= vivado
+VIV  ?= /c/Xilinx/Vivado/2022.2/bin/vivado
 VSIM ?= vsim
 
 # ==== Example 폴더 지정 (필수) ====
