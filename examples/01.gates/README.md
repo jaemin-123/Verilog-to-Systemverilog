@@ -1,158 +1,86 @@
-# Gates (AND / OR / NOT / NAND)
+# 01. Gates – AND / OR / NOT / NAND
 
-> **Board:** Basys3 (XC7A35T-1CPG236C) · **Vivado:** 2022.2 · **Language:** Verilog HDL
-
-<img width="437" height="472" alt="image" src="https://github.com/user-attachments/assets/dd989f9c-6197-4379-9690-53cd69a7ab4b" />
-
+> Basys3 (XC7A35T-1CPG236C) · Vivado 2022.2 · Language: Verilog / SystemVerilog
 
 ---
 
-## Truth Table
-| iA | iB | AND | OR | NOT(iA) | NAND | NAND2 |
-|:-:|:-:|:-:|:-:|:-:|:-:|:-:|
-| 0 | 0 | 0 | 0 | 1 | 1 | 1 |
-| 0 | 1 | 0 | 1 | 1 | 1 | 1 |
-| 1 | 0 | 0 | 1 | 0 | 1 | 1 |
-| 1 | 1 | 1 | 1 | 0 | 0 | 0 |
+## 1. 예제 개요
 
-## Pin Map (Basys3)
-| Port  | Pin | IO Std   | Resource |
-|------|-----|----------|----------|
-| iA     | V17 | LVCMOS33 | SW0  |
-| iB     | V16 | LVCMOS33 | SW1  |
-| oAND   | U16 | LVCMOS33 | LED0 |
-| oOR    | E19 | LVCMOS33 | LED1 |
-| oNOT   | U19 | LVCMOS33 | LED2 |
-| oNAND  | V19 | LVCMOS33 | LED3 |
-| oNAND2 | W18 | LVCMOS33 | LED4 |
+- 두 입력 `iA`, `iB`에 대해 AND, OR, NOT, NAND 출력을 만드는 가장 기본적인 조합논리 예제
+- 동일 기능을 Verilog / SystemVerilog로 작성해서 비교하는 베이스 예제
+- 이후 MUX, 카운터, UART 같은 다른 예제들도 **제목/이미지/파일명만 바꿔서** 같은 형태로 정리하는 것을 목표
 
 ---
 
-## Simulation
-<img width="1138" height="245" alt="image" src="https://github.com/user-attachments/assets/5d3d3ced-a690-4c46-8217-1d001b92f495" />
+## 2. 블록 다이어그램
 
-### Vivado xsim (Non‑project, 추천)
+```text
+examples/01.gates/images/block.png
+```
+
+![Gates block diagram](./images/block.png)
+
+게이트 구성
+
+- `U0` : AND (`oAND`)
+- `U1` : OR  (`oOR`)
+- `U2` : NOT (`oNOT`)
+- `U3` : NAND (`oNAND`)
+- `U4` + `U5` : AND → NOT 으로 만든 두 번째 NAND (`oNAND2`)
+
+---
+
+## 3. 시뮬레이션 파형
+
+```text
+examples/01.gates/images/wave.png
+```
+
+![Gates simulation waveform](./images/wave.png)
+
+- `iA`, `iB` 입력을 00 → 01 → 10 → 11 순서로 변화
+- 각 출력(`oAND`, `oOR`, `oNOT`, `oNAND`, `oNAND2`)이 트루스 테이블과 일치하는지 확인
+
+---
+
+## 4. 파일 구성
+
+```text
+examples/01.gates/
+├─ gates.v         # Verilog RTL
+├─ gates_sv.sv     # SystemVerilog RTL (옵션)
+├─ tb_gates.v      # 공통 테스트벤치
+├─ images/
+│  ├─ block.png    # 블록 다이어그램
+│  └─ wave.png     # 시뮬레이션 파형
+└─ README.md       # 이 문서
+```
+
+- `gates.v`  
+  - AND / OR / NOT / NAND 게이트 조합 회로
+- `gates_sv.sv`  
+  - 같은 기능을 SystemVerilog 스타일로 작성한 버전 (있으면)
+- `tb_gates.v`  
+  - `iA`, `iB` 패턴을 4가지 경우(00,01,10,11)로 바꾸며 출력 검증
+- `images/*.png`  
+  - 포트폴리오 / 문서용 그림
+
+핀맵(XDC), 시뮬레이션/합성/비트스트림 플로우는  
+레포 루트의 공통 문서(`README.md`, `doc/flow.md` 등)를 참고.
+
+---
+
+## 5. 실행 요약
+
+레포 **루트**에서 아래처럼 실행한다고 가정.
+
 ```bash
-# 동일 폴더에 gates.v / tb_gates.v가 있다고 가정
-xvlog gates.v tb_gates.v
-xelab tb_gates -s tb_gates_sim --debug typical
-xsim tb_gates_sim -gui
-#위의 3개를 한번에
-make gui-xsim
-# xsim 콘솔에서:
-add_wave -recursive *
-run all
-```
-> **xvlog: 소스 컴파일**
-> **xelab: 엘라보(링킹/스냅샷 생성)**
-> **xsim: 실행(콘솔/GUI)**
+# Vivado xsim 시뮬레이션 (콘솔)
+make xsim EX=examples/01.gates
 
-### ModelSim‑Intel / Questa
-```tcl
-vdel -all
-vlib work
-vlog +acc gates.v tb_gates.v
-vsim tb_gates
-add wave -r /*
-run -all
+# Vivado xsim GUI
+make xsim_gui EX=examples/01.gates
 ```
 
-> 테스트벤치 팁: 배치 실행이면 `$finish` 권장. 파형 로그를 남기려면 `$monitor`/`$dump*`(툴에 따라)를 추가하세요.
-
----
-
-## Synthesis & Bitstream (Vivado)
-
-1. **Create Project** → `gates.v` 추가, **Top = gates**
-2. 아래 **XDC**를 추가
-3. **Generate Bitstream** (Synthesis → Implementation → Bitstream)
-4. **Open Hardware Manager** → Program Device
-
-```tcl
-# .xdc
-set_property -dict { PACKAGE_PIN V17 IOSTANDARD LVCMOS33 } [get_ports iA]
-set_property -dict { PACKAGE_PIN V16 IOSTANDARD LVCMOS33 } [get_ports iB]
-set_property -dict { PACKAGE_PIN U16 IOSTANDARD LVCMOS33 } [get_ports oAND]
-set_property -dict { PACKAGE_PIN E19 IOSTANDARD LVCMOS33 } [get_ports oOR]
-set_property -dict { PACKAGE_PIN U19 IOSTANDARD LVCMOS33 } [get_ports oNOT]
-set_property -dict { PACKAGE_PIN V19 IOSTANDARD LVCMOS33 } [get_ports oNAND]
-set_property -dict { PACKAGE_PIN W18 IOSTANDARD LVCMOS33 } [get_ports oNAND2]
-```
-
-> 주의: **Top은 테스트벤치가 아닌 `gates`** 여야 합니다. TB는 시뮬 전용.
-
----
-
-## Source Code
-
-### `gates.v`
-```verilog
-`timescale 1ns/1ps
-`default_nettype none
-
-module gates(
-  input  wire iA, iB,
-  output wire oAND, oOR, oNOT, oNAND, oNAND2
-);
-  wire s0;
-  and  U0 (oAND , iA, iB);
-  or   U1 (oOR  , iA, iB);
-  not  U2 (oNOT , iA);
-  nand U3 (oNAND, iA, iB);
-  and  U4 (s0, iA, iB);
-  not  U5 (oNAND2, s0);
-endmodule
-
-`default_nettype wire
-```
-
-### `tb_gates.v`
-```verilog
-`timescale 1ns/1ps
-module tb_gates;
-  reg  iA, iB;
-  wire oAND, oOR, oNOT, oNAND, oNAND2;
-
-  gates U0(.iA(iA), .iB(iB), .oAND(oAND), .oOR(oOR),
-           .oNOT(oNOT), .oNAND(oNAND), .oNAND2(oNAND2));
-
-  initial begin
-    $monitor("%t iA=%0b iB=%0b AND=%0b OR=%0b NOT=%0b NAND=%0b NAND2=%0b",
-             $time, iA,iB,oAND,oOR,oNOT,oNAND,oNAND2);
-    iA=0; iB=0; #10;
-    iA=0; iB=1; #10;
-    iA=1; iB=0; #10;
-    iA=1; iB=1; #10;
-    $finish;
-  end
-endmodule
-```
-
----
-
-## Files & Tree
-```
-01.gates/
-  gates.v
-  tb_gates.v
-  xdc/gates.xdc
-  scripts/
-    Makefile       # sim-msim / sim-xsim (xelab --debug typical 포함)
-    run.do         # ModelSim
-    xsim.tcl       # Vivado non-project
-  README.md
-```
-
----
-
-## Troubleshooting
-- **xsim에서 파형이 안 뜸** → `xelab --debug typical`로 재컴파일.
-- **UCIO‑1 / NSTD‑1 경고** → XDC 핀 누락/IOSTANDARD 누락.
-- **missing separator** → Makefile 탭/개행(LF) 확인 + BOM 제거.
-
----
-
-## Tcl (Non‑project)
-```bash
-vivado -mode batch -source scripts/xsim.tcl
-```
+보드 다운로드, ModelSim 사용, Vivado 합성/비트스트림 플로우는  
+공통 가이드에 정리하고, 각 예제 README에서는 이 정도 요약만 남기는 구조로 사용.
